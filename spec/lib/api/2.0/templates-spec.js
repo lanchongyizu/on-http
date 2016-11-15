@@ -3,15 +3,11 @@
 'use strict';
 
 describe('Http.Api.Templates', function () {
-    var workflowApiService;
-    var taskProtocol;
     var lookupService;
     var templates;
     var Errors;
     var waterline;
-    var swagger;
     var tasksApiService;
-    var findActiveGraphForTarget;
 
     before('start HTTP server', function () {
         this.timeout(5000);
@@ -21,11 +17,9 @@ describe('Http.Api.Templates', function () {
     });
 
     beforeEach('set up mocks', function () {
-        taskProtocol = helper.injector.get('Protocol.Task');
         lookupService = helper.injector.get('Services.Lookup');
         Errors = helper.injector.get('Errors');
         waterline = helper.injector.get('Services.Waterline');
-        swagger = helper.injector.get('Http.Services.Swagger');
         this.sandbox = sinon.sandbox.create();
 
         tasksApiService = helper.injector.get('Http.Services.Api.Tasks');
@@ -33,18 +27,6 @@ describe('Http.Api.Templates', function () {
 
         lookupService.ipAddressToMacAddress = sinon.stub().resolves('00:11:22:33:44:55');
         lookupService.reqIpAddressToMacAddress = sinon.stub().resolves();
-
-        sinon.stub(taskProtocol, 'activeTaskExists').resolves({});
-        sinon.stub(taskProtocol, 'requestCommands').resolves({ testcommands: 'cmd' });
-        sinon.stub(taskProtocol, 'requestProfile').resolves();
-        sinon.stub(taskProtocol, 'requestProperties').resolves();
-
-        workflowApiService = helper.injector.get('Http.Services.Api.Workflows');
-        findActiveGraphForTarget = this.sandbox.stub(
-            workflowApiService, 'findActiveGraphForTarget');
-
-
-        sinon.stub(workflowApiService, 'createActiveGraph').resolves({ instanceId: 'test' });
 
         templates = helper.injector.get('Templates');
         sinon.stub(templates, 'getAll').resolves();
@@ -66,8 +48,6 @@ describe('Http.Api.Templates', function () {
             }).value();
         }
         resetMocks(lookupService);
-        resetMocks(taskProtocol);
-        resetMocks(workflowApiService);
         resetMocks(templates);
     });
 
@@ -169,28 +149,6 @@ describe('Http.Api.Templates', function () {
                 .send('test_template_foo\n')
                 .expect('Content-Type', /^application\/json/)
                 .expect(400);
-        });
-    });
-
-    describe('GET SB /templates/:name', function () {
-        it('should return a template', function () {
-            var graph = {
-                instanceId: '0123'
-            };
-            waterline.nodes = {
-                needByIdentifier: sinon.stub().resolves({
-                    id: 'node id'
-                })
-            };
-            findActiveGraphForTarget.resolves(graph);
-            this.sandbox.stub(swagger, 'makeRenderableOptions').resolves({});
-            taskProtocol.requestProperties.resolves({});
-            return helper.request().get('/api/2.0/templates/123')
-                .expect(200)
-                .then(function () {
-                    expect(templates.render).to.have.been.calledOnce;
-                    expect(templates.render).to.have.been.calledWith('123');
-                });
         });
     });
 

@@ -4,6 +4,8 @@
 
 describe('Http.Api.Nodes v1.1', function () {
     var configuration;
+    var templates;
+    var taskProtocol;
     var waterline;
     var ObmService;
     var workflowApiService;
@@ -18,10 +20,14 @@ describe('Http.Api.Nodes v1.1', function () {
         return helper.startServer([
         ]).then(function () {
             configuration = helper.injector.get('Services.Configuration');
+            sinon.stub(configuration, "get");
+            sinon.stub(configuration, "set");
+            sinon.stub(configuration, "getAll", function() {
+                return {};
+            });
             lookupService = helper.injector.get('Services.Lookup');
             lookupService.ipAddressToMacAddress = sinon.stub().resolves();
             lookupService.ipAddressToNodeId = sinon.stub().resolves();
-            sinon.stub(configuration);
 
             waterline = helper.injector.get('Services.Waterline');
             sinon.stub(waterline.nodes);
@@ -57,6 +63,10 @@ describe('Http.Api.Nodes v1.1', function () {
             Constants = helper.injector.get('Constants');
             Errors = helper.injector.get('Errors');
 
+            templates = helper.injector.get("Templates");
+            templates.get = sinon.stub().resolves();
+            taskProtocol = helper.injector.get("Protocol.Task");
+            taskProtocol.requestProperties = sinon.stub().resolves();
         });
 
     });
@@ -937,6 +947,7 @@ describe('Http.Api.Nodes v1.1', function () {
                 .expect(404);
         });
     });
+
     describe('Tag support', function() {
         before(function() {
             sinon.stub(nodesApiService, 'getTagsById').resolves([]);
@@ -981,5 +992,95 @@ describe('Http.Api.Nodes v1.1', function () {
 
     });
 
+    describe('GET /nodes/:identifier/templates/:templateName', function () {
+        function templateRequest(input, output) {
+            workflowApiService.findActiveGraphForTarget.resolves({});
+            templates.get.resolves({ contents: input });
 
+            return helper.request().get('/api/1.1/nodes/123/templates/test_template')
+            .expect('Content-Type', /^text\/html/)
+            .expect(200, output);
+        }
+
+        it('should succeed with an existing DHCP lease, node and template', function () {
+            return templateRequest('test_cmd', 'test_cmd')
+            .expect(function () {
+                expect(templates.get).to.have.been.calledWith('test_template');
+            });
+        });
+
+        it('should render a template with the server', function () {
+            configuration.get.returns("10.1.1.1");
+            return templateRequest(
+                '<%= server %>',
+                configuration.get('apiServerAddress', '10.1.1.1')
+            );
+        });
+
+        it('should render a template with the http port', function () {
+            configuration.get.returns(80);
+            return templateRequest(
+                '<%= port %>',
+                configuration.get('apiServerPort', 80).toString()
+            );
+        });
+
+        it('should render a template with the request IP', function () {
+            return templateRequest(
+                '<%= ipaddress %>',
+                '127.0.0.1'
+            );
+        });
+
+        it('should render a template with the subnet mask', function () {
+            configuration.get.returns("255.255.255.0");
+            return templateRequest(
+                '<%= netmask %>',
+                configuration.get('dhcpSubnetMask', '255.255.255.0')
+            );
+        });
+
+        it('should render a template with the gateway IP', function () {
+            configuration.get.returns("10.1.1.1");
+            return templateRequest(
+                '<%= gateway %>',
+                configuration.get('dhcpGateway', '10.1.1.1')
+            );
+        });
+
+        it('should render a template with the MAC address', function () {
+            lookupService.ipAddressToMacAddress.resolves('01:23:45:ab:cd:ef');
+            return templateRequest(
+                '<%= macaddress %>',
+                '01:23:45:ab:cd:ef'
+            );
+        });
+
+        it('should render a template with a custom task property', function () {
+            taskProtocol.requestProperties.resolves({
+                myprop: 'foobar'
+            });
+            return templateRequest(
+                '<%= myprop %>',
+                'foobar'
+            );
+        });
+
+        it('should 500 error if the node does not have an active task graph', function () {
+            workflowApiService.findActiveGraphForTarget.resolves(undefined);
+
+            return helper.request().get('/api/1.1/nodes/123/templates/test_template')
+            .expect('Content-Type', /^application\/json/)
+            .expect(500, /Unable to find active graph for node/);
+        });
+
+        it('should 500 error if the template contains syntax errors', function () {
+            workflowApiService.findActiveGraphForTarget.resolves({});
+            templates.get.resolves({ contents: 'test_cmd<%adb-34n.cif}d%>\n' });
+
+            return helper.request().get('/api/1.1/nodes/123/templates/test_template')
+            .expect('Content-Type', /^application\/json/)
+            .expect(500, /SyntaxError/);
+        });
+    });
 });
