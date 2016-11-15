@@ -54,8 +54,8 @@ if( $Response_RAW -match "LOCATION:(.*)" ) {
 
 Write-Host Using RackHD instance: $server
 
-$url1 = "${server}templates/unattend_server2012.xml"
-$url2 = "${server}templates/winpe-kickstart.ps1"
+$url1 = "${server}nodes/<%=nodeId%>/templates/unattend_server2012.xml"
+$url2 = "${server}nodes/<%=nodeId%>/templates/winpe-kickstart.ps1"
 curl ${url1} -Outfile unattend.xml
 Write-Host loading ${url2}
 curl ${url2} -Outfile winpe-kickstart.ps1

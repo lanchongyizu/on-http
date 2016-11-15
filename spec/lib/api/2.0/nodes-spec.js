@@ -12,6 +12,11 @@ describe('2.0 Http.Api.Nodes', function () {
     var Constants;
     var Errors;
     var nodesApi;
+    var swagger;
+    var workflowApiService;
+    var findActiveGraphForTarget;
+    var taskProtocol;
+    var templates;
 
     before('start HTTP server', function () {
         this.timeout(10000);
@@ -41,6 +46,21 @@ describe('2.0 Http.Api.Nodes', function () {
             Errors = helper.injector.get('Errors');
             nodesApi = helper.injector.get('Http.Services.Api.Nodes');
 
+            swagger = helper.injector.get('Http.Services.Swagger');
+
+            workflowApiService = helper.injector.get('Http.Services.Api.Workflows');
+            sinon.stub(workflowApiService, 'createActiveGraph').resolves({ instanceId: 'test' });
+
+            findActiveGraphForTarget = sinon.stub(
+                workflowApiService, 'findActiveGraphForTarget');
+            taskProtocol = helper.injector.get('Protocol.Task');
+            sinon.stub(taskProtocol, 'activeTaskExists').resolves({});
+            sinon.stub(taskProtocol, 'requestCommands').resolves({ testcommands: 'cmd' });
+            sinon.stub(taskProtocol, 'requestProfile').resolves();
+            sinon.stub(taskProtocol, 'requestProperties').resolves();
+
+            templates = helper.injector.get('Templates');
+            sinon.stub(templates, 'render').resolves();
         });
     });
 
@@ -60,7 +80,9 @@ describe('2.0 Http.Api.Nodes', function () {
         resetStubs(waterline.catalogs);
         resetStubs(waterline.workitems);
         resetStubs(waterline.graphobjects);
-        //resetStubs(workflowApiService);
+        resetStubs(workflowApiService);
+        resetStubs(taskProtocol);
+        resetStubs(templates);
 
         ObmService.prototype.identifyOn.reset();
         ObmService.prototype.identifyOff.reset();
@@ -904,6 +926,23 @@ describe('2.0 Http.Api.Nodes', function () {
                 .expect(201)
                 .expect(function() {
                     expect(nodesApi.putObmsByNodeId).to.have.been.calledWith('123',obm);
+                });
+        });
+    });
+
+    describe('GET /nodes/:identifier/templates/:templateName', function () {
+        it('should return a template', function () {
+            var graph = {
+                instanceId: '0123'
+            };
+            findActiveGraphForTarget.resolves(graph);
+            sinon.stub(swagger, 'makeRenderableOptions').resolves({});
+            taskProtocol.requestProperties.resolves({});
+            return helper.request().get('/api/2.0/nodes/123/templates/123')
+                .expect(200)
+                .then(function () {
+                    expect(templates.render).to.have.been.calledOnce;
+                    expect(templates.render).to.have.been.calledWith('123');
                 });
         });
     });

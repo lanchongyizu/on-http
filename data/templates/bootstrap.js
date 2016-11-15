@@ -226,18 +226,13 @@ function getTasks(timeout) {
 
 /**
  * Get Tasks - Retrieves a script from the API server (via several potential
- *             API routes such as /files, /templates, or static files)
+ *             API routes such as /files, /nodes, or static files)
  * @private
  * @param downloadUrl
  * @param cb
  */
 function getFile(downloadUrl, cb) {
-    http.request({
-        hostname: server,
-        port: port,
-        path: downloadUrl,
-        method: 'GET'
-    }, function (res) {
+    http.request(downloadUrl, function (res) {
         var filename = path.basename(downloadUrl);
         var stream = fs.createWriteStream(filename);
 
