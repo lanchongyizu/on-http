@@ -17,7 +17,6 @@ describe('Http.Server', function () {
             dihelper.simpleWrapper(require('swagger-express-mw'),
                 'swagger', undefined, __dirname),
             dihelper.simpleWrapper({}, 'Task.Services.OBM'),
-            onHttpContext.helper.simpleWrapper({}, 'TaskGraph.TaskGraph'),
             onHttpContext.helper.simpleWrapper({}, 'TaskGraph.Store'),
             dihelper.simpleWrapper({}, 'ipmi-obm-service'),
             dihelper.requireWrapper('rimraf', 'rimraf', undefined, __dirname),

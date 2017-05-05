@@ -19,7 +19,6 @@ describe("SKU Pack Service", function() {
     before(function() {
         helper.setupInjector([
             dihelper.simpleWrapper({}, 'TaskGraph.Store'),
-            dihelper.simpleWrapper({}, 'TaskGraph.TaskGraph'),
             helper.require("/lib/services/workflow-api-service"),
             helper.require("/lib/services/sku-pack-service"),
             helper.require('/lib/services/taskgraph-api-service'),

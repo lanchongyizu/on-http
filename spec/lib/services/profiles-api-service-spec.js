@@ -16,7 +16,6 @@ describe("Http.Services.Api.Profiles", function () {
     before("Http.Services.Api.Profiles before", function() {
         helper.setupInjector([
             helper.di.simpleWrapper({}, 'TaskGraph.Store'),
-            helper.di.simpleWrapper({}, 'TaskGraph.TaskGraph'),
             helper.require("/lib/services/workflow-api-service"),
             helper.require("/lib/services/profiles-api-service"),
             helper.require("/lib/services/swagger-api-service"),

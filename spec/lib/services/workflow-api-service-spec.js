@@ -15,7 +15,6 @@ describe('Http.Services.Api.Workflows', function () {
     var workflowDefinition;
     var workflow;
     var Promise;
-    var TaskGraph;
     var taskGraphService;
 
     before('Http.Services.Api.Workflows before', function() {
@@ -29,7 +28,6 @@ describe('Http.Services.Api.Workflows', function () {
         store = helper.injector.get('TaskGraph.Store');
         env = helper.injector.get('Services.Environment');
         Promise = helper.injector.get('Promise');
-        TaskGraph = helper.injector.get('TaskGraph.TaskGraph');
         taskGraphService = helper.injector.get('Http.Services.Api.Taskgraph.Scheduler');
 
     });

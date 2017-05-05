@@ -53,7 +53,6 @@ describe('Http.Api.Login', function () {
     helper.before(function () {
         return [
             dihelper.simpleWrapper(require('swagger-express-mw'), 'swagger'),
-            dihelper.simpleWrapper({}, 'TaskGraph.TaskGraph'),
             dihelper.simpleWrapper({}, 'TaskGraph.Store'),
             dihelper.simpleWrapper({}, 'Task.Services.OBM'),
             dihelper.simpleWrapper({}, 'ipmi-obm-service'),
