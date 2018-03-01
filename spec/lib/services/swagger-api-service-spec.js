@@ -336,9 +336,11 @@ describe('Services.Http.Swagger', function() {
             req = {
                 swagger: {
                     options: {},
-                    operation:{
-                        api:{
-                            basePath: "nothing"
+                    operation: {
+                        pathObject: {
+                            api:{
+                                basePath: "nothing"
+                            }
                         }
                     }
                 }
@@ -472,9 +474,11 @@ describe('Services.Http.Swagger', function() {
             req = {
                 swagger: {
                     options: {},
-                    operation:{
-                        api:{
-                            basePath: 'nothing'
+                    operation: {
+                        pathObject: {
+                            api:{
+                                basePath: 'nothing'
+                            }
                         }
                     }
                 }
